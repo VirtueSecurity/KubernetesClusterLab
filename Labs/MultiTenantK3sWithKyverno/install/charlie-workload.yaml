@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-c-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-site-deployment
+  namespace: team-c-test
+  labels:
+    app: static-site
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: static-site
+  template:
+    metadata:
+      labels:
+        app: static-site
+    spec:
+      containers:
+      - name: static-site
+        image: nginxdemos/hello:plain-text
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-site-service
+  namespace: team-c-test
+spec:
+  selector:
+    app: static-site
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: static-site-ingressroute
+  namespace: team-c-test
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned-issuer
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`team-c.k3s-cluster.local`) && PathPrefix(`/static`)
+      kind: Rule
+      services:
+        - name: static-site-service
+          port: 80
+  tls:
+    secretName: team-c-example-com-tls

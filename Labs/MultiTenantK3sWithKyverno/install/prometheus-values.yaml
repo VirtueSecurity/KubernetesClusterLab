@@ -1,0 +1,7 @@
+grafana:
+  adminPassword: your-strong-password
+prometheus:
+  prometheusSpec:
+    maximumStartupDurationSeconds: 120
+    podMonitorSelectorNilUsesPods: false
+    serviceMonitorSelectorNilUsesPods: false

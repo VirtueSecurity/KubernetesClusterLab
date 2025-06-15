@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-a-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: team-a-test
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: team-a-test
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nginx-ingressroute
+  namespace: team-a-test
+  annotations:
+    # This annotation tells cert-manager to issue a certificate for team-a.example.com
+    cert-manager.io/cluster-issuer: selfsigned-issuer
+spec:
+  entryPoints:
+    - websecure # Prefer HTTPS
+  routes:
+    - match: Host(`team-a.k3s-cluster.local`)
+      kind: Rule
+      services:
+        - name: nginx-service
+          port: 80
+  tls:
+    # cert-manager will store the generated certificate in this secret
+    secretName: team-a-example-com-tls

@@ -1,0 +1,133 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: capsule-tenant-ingressroute-creator
+rules:
+- apiGroups: ["traefik.io"] # API group for IngressRoute
+  resources: ["ingressroutes", "ingressroutes/status"] # Allow managing IngressRoute and its status
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: v1
+kind: Namespace
+metadata:  
+  name: tenant-system
+---
+# apiVersion: v1
+# kind: Namespace
+# metadata:  
+#   name: team-a
+# ---
+# apiVersion: v1
+# kind: Namespace
+# metadata:  
+#   name: team-b
+# ---
+# apiVersion: v1
+# kind: Namespace
+# metadata:  
+#   name: team-c
+# ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alice-sa
+  namespace: tenant-system # Or the namespace where you want this SA to reside
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bob-sa
+  namespace: tenant-system # Or the namespace where you want this SA to reside
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: charlie-sa
+  namespace: tenant-system # Or the namespace where you want this SA to reside
+---
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-a
+spec:  
+  owners:
+  - kind: ServiceAccount
+    name: system:serviceaccount:tenant-system:alice-sa
+    clusterRoles:
+    - admin
+    - capsule-namespace-deleter
+    - capsule-tenant-ingressroute-creator
+  namespaceOptions:
+    additionalMetadata:
+      labels:
+        team: team-a
+  # limitRanges:
+  #   - defaultRequest:
+  #       cpu: 100m
+  #       memory: 128Mi
+  #     default:
+  #       cpu: 200m
+  #       memory: 256Mi
+  # resourceQuotas:
+  #   - hard:
+  #       cpu: "2"
+  #       memory: "4Gi"
+  #       pods: "50"
+---
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-c
+spec:  
+  owners:
+    - kind: ServiceAccount
+      name: system:serviceaccount:tenant-system:charlie-sa
+      clusterRoles:
+      - admin
+      - capsule-namespace-deleter
+      - capsule-tenant-ingressroute-creator
+  namespaceOptions:
+    additionalMetadata:
+      labels:
+        team: team-c
+  # limitRanges:
+  #   - defaultRequest:
+  #       cpu: 100m
+  #       memory: 128Mi
+  #     default:
+  #       cpu: 200m
+  #       memory: 256Mi
+  # resourceQuotas:
+  #   - hard:
+  #       cpu: "2"
+  #       memory: "4Gi"
+  #       pods: "50"
+---
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-b
+spec:
+  owners:  
+  - kind: ServiceAccount
+    name: system:serviceaccount:tenant-system:bob-sa      
+    clusterRoles:
+    - admin
+    - capsule-namespace-deleter
+    - capsule-tenant-ingressroute-creator
+  namespaceOptions:
+    additionalMetadata:
+      labels:
+        team: team-b
+  # limitRanges:
+  #   - defaultRequest:
+  #       cpu: 100m
+  #       memory: 128Mi
+  #     default:
+  #       cpu: 200m
+  #       memory: 256Mi
+  # resourceQuotas:
+  #   - hard:
+  #       cpu: "2"
+  #       memory: "4Gi"
+  #       pods: "50"

@@ -1,0 +1,7 @@
+ui:
+  # -- (bool) Enable Policy Reporter UI
+  enabled: true
+plugin:
+  kyverno:
+    # -- (bool) Enable Kyverno Plugin
+    enabled: true
