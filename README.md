@@ -94,11 +94,11 @@ Each lab README contains specific instructions for additional tools required for
 ## 🔍 Available Labs
 
 The project currently includes the following lab environments:
-* [Vanilla K3s](#vanilla-k3s)
-* [Multi-Tenant K3s with Kyverno](#multi-tenant-k3s-with-kyverno)
 
-### [Vanilla K3s](labs/VanillaK3s/README.md)
+### [Vanilla K3s](Labs/VanillaK3s/README.md)
 A basic K3s Kubernetes cluster setup for general exploration and testing.
+
+[→ Go to Lab Instructions](Labs/VanillaK3s/README.md)
 
 ### [Multi-Tenant K3s with Kyverno](Labs/MultiTenantK3sWithKyverno/README.md)
 
