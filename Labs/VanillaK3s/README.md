@@ -1,16 +1,16 @@
 <!-- TOC -->
 * [Vanilla K3s Kubernetes Cluster Install and Setup](#vanilla-k3s-kubernetes-cluster-install-and-setup)
   * [Overview](#overview)
-  * [Single Node Local K3S Cluster](#single-node-local-k3s-cluster)
-    * [Install](#install)
-    * [Check Access](#check-access)
-    * [Create Admin Service Account and Kube Config](#create-admin-service-account-and-kube-config)
-    * [Create Read Only Service Account](#create-read-only-service-account)
-    * [Choose a context](#choose-a-context)
+  * [Single Node Local K3S Cluster Installation](#single-node-local-k3s-cluster-installation)
+    * [Install K3s](#install-k3s)
+    * [Veruf Access to the Cluster using `kubectl`](#veruf-access-to-the-cluster-using-kubectl)
+    * [Create an Admin Service Account and Kube Config](#create-an-admin-service-account-and-kube-config)
+    * [Create a Read-Only Service Account](#create-a-read-only-service-account)
+    * [Switch Between `kubectl` Contexts](#switch-between-kubectl-contexts)
     * [Start/Stop Daemon](#startstop-daemon)
-    * [Uninstall](#uninstall)
-    * [Install Helm Packages Into Cluster](#install-helm-packages-into-cluster)
-      * [Configure Traefik - Already Installed](#configure-traefik---already-installed)
+    * [Uninstall K3s (for reference)](#uninstall-k3s-for-reference)
+    * [Install Cluster Services via Helm](#install-cluster-services-via-helm)
+      * [Configure Traefik - Already Installed by K3s](#configure-traefik---already-installed-by-k3s)
       * [Cert-Manager](#cert-manager)
       * [Prometheus](#prometheus)
       * [Get All Installed Helm Charts](#get-all-installed-helm-charts)
@@ -35,14 +35,20 @@ This lab environment includes:
 - **Certificates**: Automatic certificate generation with cert-manager
 - **Example Workloads**: Basic applications to demonstrate functionality
 
-## Single Node Local K3S Cluster
 
-### Install
+## Single Node Local K3S Cluster Installation
+
+### Install K3s
+
+First, update your system's package repositories and install K3s.
 
 ```bash
-$ sudo apt update && sudo apt upgrade
-$ curl -sfL https://get.k3s.io | sh -
-$ systemctl status k3s
+  sudo apt update && sudo apt upgrade
+  curl -sfL https://get.k3s.io | sh -
+```
+After installation, verify that the K3s service is active and running.
+```bash
+  systemctl status k3s
 ● k3s.service - Lightweight Kubernetes
      Loaded: loaded (/etc/systemd/system/k3s.service; enabled; preset: enabled)
      Active: active (running) since Mon 2025-05-26 10:45:31 CDT; 17s ago
@@ -77,103 +83,105 @@ May 26 10:45:47 XPS-13-9350 k3s[1406452]: I0526 10:45:47.313031 1406452 event.go
 lines 1-31/31 (END)
 ```
 
-### Check Access
+### Veruf Access to the Cluster using `kubectl`
 ```bash
-$ sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get nodes
+  sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get nodes
 AME                    STATUS   ROLES                  AGE     VERSION
 xps-13-9350   Ready    control-plane,master   6m37s   v1.32.5+k3s1
 ```
 
-### Create Admin Service Account and Kube Config
+### Create an Admin Service Account and Kube Config
+
 ```bash
-$ sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f ../MultiTenantK3sWithKyverno/installnew-service-account.yaml
-$ TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token my-admin-sa -n platform-team --duration=8760h)
-$ K3S_SERVER_IP=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-$ K3S_CA_DATA=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
-$ echo "${K3S_CA_DATA}" | base64 -d > ~/.kube/k3s-ca.crt
-$ kubectl config set-cluster k3s-cluster   --server="${K3S_SERVER_IP}"   --certificate-authority="${HOME}/.kube/k3s-ca.crt"   --embed-certs=true
-$ kubectl config set-credentials my-admin-sa-user   --token="${TOKEN}"
-$ kubectl config set-context my-admin-sa-context   --cluster=k3s-cluster   --user=my-admin-sa-user   --namespace=default
-$ kubectl config use-context my-admin-sa-context
-$ kubectl get nodes
+  sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f ../MultiTenantK3sWithKyverno/install/new-service-account.yaml
+  TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token my-admin-sa -n platform-team --duration=8760h)
+  K3S_SERVER_IP=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+  K3S_CA_DATA=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+  echo "${K3S_CA_DATA}" | base64 -d > ~/.kube/k3s-ca.crt
+  kubectl config set-cluster k3s-cluster   --server="${K3S_SERVER_IP}"   --certificate-authority="${HOME}/.kube/k3s-ca.crt"   --embed-certs=true
+  kubectl config set-credentials my-admin-sa-user   --token="${TOKEN}"
+  kubectl config set-context my-admin-sa-context   --cluster=k3s-cluster   --user=my-admin-sa-user   --namespace=default
+  kubectl config use-context my-admin-sa-context
+  kubectl get nodes
 NAME                    STATUS   ROLES                  AGE   VERSION
 xps-13-9350   Ready    control-plane,master   27m   v1.32.5+k3s1
 ```
 
-### Create Read Only Service Account
+### Create a Read-Only Service Account
 
 ```bash
-$ sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f ../MultiTenantK3sWithKyverno/installread-only-sa.yaml
-$ TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token -n platform-team my-readonly-sa --duration=8760h)
-$ kubectl config set-credentials read-only-sa-user   --token="${TOKEN}"
-$ kubectl config set-context my-readonly-sa-context   --cluster=k3s-cluster   --user=read-only-sa-user   --namespace=default
+  sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f ../MultiTenantK3sWithKyverno/install/read-only-sa.yaml
+  TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token -n platform-team my-readonly-sa --duration=8760h)
+  kubectl config set-credentials read-only-sa-user   --token="${TOKEN}"
+  kubectl config set-context my-readonly-sa-context   --cluster=k3s-cluster   --user=read-only-sa-user   --namespace=default
 ```
 
-### Choose a context
+### Switch Between `kubectl` Contexts
 
 ```bash
-$ kubectl config get-contexts
-$ kubectl config use-context my-readonly-sa-context # choose read only user or
-$ kubectl config use-context my-admin-sa-context # choose admin user
+  kubectl config get-contexts
+  kubectl config use-context my-readonly-sa-context # choose read only user or
+  kubectl config use-context my-admin-sa-context # choose admin user
 ```
 
 ### Start/Stop Daemon
 
 Prevent It From Starting by Default on Boot
 ```bash
-$ systemctl disable k3s
+  systemctl disable k3s
 ```
 
 Status
 ```bash
-$ systemctl status k3s
+  systemctl status k3s
 ```
 
 Start
 ```bash
-$ systemctl start k3s
+  systemctl start k3s
 ```
 
 Stop
 
 ```bash
-$ systemctl stop k3s
+  systemctl stop k3s
 ```
 
-### Uninstall
+### Uninstall K3s (for reference)
 
 ```bash
-$ /usr/local/bin/k3s-uninstall.sh
+  /usr/local/bin/k3s-uninstall.sh
 ```
 
+### Install Cluster Services via Helm
 
-### Install Helm Packages Into Cluster
+#### Configure Traefik - Already Installed by K3s
 
-#### Configure Traefik - Already Installed
+K3s already has Traefik installed as a helm package. They have a special way to "upgrade" that helm package by dropping a new `values.yaml` file in a special diretory.
 
 ```bash
-$ sudo cp ../MultiTenantK3sWithKyverno/installtraefik-custom-config.yaml /var/lib/rancher/k3s/server/manifests/
+  sudo cp ../MultiTenantK3sWithKyverno/install/traefik-custom-config.yaml /var/lib/rancher/k3s/server/manifests/
 ```
 
 #### Cert-Manager
 ```bash
-$ helm repo add jetstack https://charts.jetstack.io
-$ helm repo update
-$ helm search repo cert-manager #check the latest version and use it below
-$ helm show values jetstack/cert-manager
-$ helm install cert-manager jetstack/cert-manager --create-namespace --namespace cert-manager  -f ../MultiTenantK3sWithKyverno/installcert-manager-values.yaml # check latest version 
-$ helm get values cert-manager -n cert-manager
-$ kubectl get pods -n cert-manager
-$ kubectl get secrets cert-manager-webhook-ca -n cert-manager -o jsonpath='{.data.tls\.crt}' | base64 --decode > ../MultiTenantK3sWithKyverno/installinternal-ca.crt
+  helm repo add jetstack https://charts.jetstack.io
+  helm repo update
+  helm search repo cert-manager #check the latest version and use it below
+  helm show values jetstack/cert-manager
+  helm install cert-manager jetstack/cert-manager --create-namespace --namespace cert-manager  -f ../MultiTenantK3sWithKyverno/install/cert-manager-values.yaml # check latest version 
+  helm get values cert-manager -n cert-manager
+  kubectl get pods -n cert-manager
+  kubectl get secrets cert-manager-webhook-ca -n cert-manager -o jsonpath='{.data.tls\.crt}' | base64 --decode > ../MultiTenantK3sWithKyverno/install/internal-ca.crt
 ```
 #### Prometheus
 
 ```bash
-$ helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-$ helm repo update
-$ helm search repo prometheus
-$ helm install prometheus prometheus-community/kube-prometheus-stack --create-namespace --namespace monitoring -f ../MultiTenantK3sWithKyverno/installprometheus-values.yaml 
-$ helm get values prometheus -n monitoring
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm repo update
+  helm search repo prometheus
+  helm install prometheus prometheus-community/kube-prometheus-stack --create-namespace --namespace monitoring -f ../MultiTenantK3sWithKyverno/install/prometheus-values.yaml 
+  helm get values prometheus -n monitoring
 Get Grafana 'admin' user password by running:
 
   kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
@@ -183,18 +191,18 @@ Access Grafana local instance:
   export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=prometheus" -oname)
   kubectl --namespace monitoring port-forward $POD_NAME 3000
 
-$ kubectl --namespace monitoring get pods -l "release=prometheus"
-$ kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+  kubectl --namespace monitoring get pods -l "release=prometheus"
+  kubectl --namespace monitoring get secrets prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
 
 https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus#scraping-pod-metrics-via-annotations
 ```
-
 #### Get All Installed Helm Charts
 
 ```bash
-$ helm list -A
+  helm list -A
 ```
 
+---
 
 ### Get to Cluster Services
 
@@ -219,14 +227,15 @@ Dashboard:
 #### Team Workloads
 
 ```bash
-$ EXTIP=$(kubectl get -n kube-system svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-$ echo "$EXTIP team-a.k3s-cluster.local metrics.team-b.k3s-cluster.local team-b.k3s-cluster.local team-c.k3s-cluster.local"| sudo tee -a /etc/hosts
+  EXTIP=$(kubectl get -n kube-system svc traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo "$EXTIP team-a.k3s-cluster.local metrics.team-b.k3s-cluster.local team-b.k3s-cluster.local team-c.k3s-cluster.local"| sudo tee -a /etc/hosts
 ```
-Visit:
-- https://team-a.k3s-cluster.local/
-- https://metrics.team-b.k3s-cluster.local
-- https://team-b.k3s-cluster.local
-- https://team-c.k3s-cluster.local/static
+
+Visit the application URLs in your browser:
+- **Team A:** https://team-a.k3s-cluster.local/
+- **Team B (Metrics):** https://metrics.team-b.k3s-cluster.local
+- **Team B (App):** https://team-b.k3s-cluster.local
+- **Team C:** https://team-c.k3s-cluster.local/static
 
 ![](../MultiTenantK3sWithKyverno/2025-05-28-13-54-11.png)
 ![](../MultiTenantK3sWithKyverno/2025-05-28-13-53-53.png)
@@ -236,7 +245,7 @@ Visit:
 #### Prometheus
 
 ```bash
-$ kubectl -n monitoring port-forward service/prometheus-operated 9090:9090
+  kubectl -n monitoring port-forward service/prometheus-operated 9090:9090
 ```
 
 Visit:
@@ -247,13 +256,13 @@ Visit:
 #### Grafana
 
 ```bash
-$ kubectl -n monitoring port-forward service/prometheus-grafana 3000:80
+  kubectl -n monitoring port-forward service/prometheus-grafana 3000:80
 ```
 
 Visit:
 - http://localhost:3000/login
   - Username: admin
-  - Password: your-strong-password (modify this in ../MultiTenantK3sWithKyverno/installprometheus-values.yaml)
+  - Password: your-strong-password (modify this in ../MultiTenantK3sWithKyverno/install/prometheus-values.yaml)
 
 ![](../MultiTenantK3sWithKyverno/2025-05-28-13-58-40.png)
 
