@@ -1,6 +1,6 @@
 # KubernetesClusterLab
 
-The purpose of this project is to provide instructions for installing, configuring, setting up, and using a variety of Kubernetes Clusters lab environments. This project includes a folder and Markdown document for each lab environment. Each folder may include kubernetes specs, helm values specs, bash scripts, or other related resources to help in the installation, setup, configuration, and usage of the cluster.
+This project provides instructions for installing, configuring, setting up, and using a variety of Kubernetes Clusters lab environments. This project includes a folder and Markdown document for each lab environment. Each folder may include kubernetes specs, helm values specs, bash scripts, or other related resources to help in the installation, setup, configuration, and usage of the cluster.
 
 <!-- TOC -->
 * [KubernetesClusterLab](#kubernetesclusterlab)
@@ -21,11 +21,12 @@ The purpose of this project is to provide instructions for installing, configuri
 
 KubernetesClusterLab is a collection of hands-on labs, configuration guides, and resources designed to help you create environments to test your Kubernetes skills, practice manual pentesting, or run various automated Kubernetes security tools using different Kubernetes cluster implementations.
 
+⚠️ Disclaimer:These environments are NOT intended to be secure. In fact, they have intentional security vulnerabilities and should not be used to run production workloads
+
 ## 🎯 Project Goals
 
 - Provide clear, detailed instructions for various Kubernetes cluster setups
 - Create ready-to-use environments with example workloads for security testing and exploration
-- These environments are NOT intended to be secure. In fact, they have intentional security vulnerabilities and should not be used to run production workloads
 
 ## 👥 Who is this for?
 
