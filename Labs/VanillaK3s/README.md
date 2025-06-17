@@ -83,7 +83,7 @@ May 26 10:45:47 XPS-13-9350 k3s[1406452]: I0526 10:45:47.313031 1406452 event.go
 lines 1-31/31 (END)
 ```
 
-### Veruf Access to the Cluster using `kubectl`
+### Verify Access to the Cluster using `kubectl`
 ```bash
   sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get nodes
 AME                    STATUS   ROLES                  AGE     VERSION
@@ -97,6 +97,8 @@ xps-13-9350   Ready    control-plane,master   6m37s   v1.32.5+k3s1
   TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token my-admin-sa -n platform-team --duration=8760h)
   K3S_SERVER_IP=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --minify -o jsonpath='{.clusters[0].cluster.server}')
   K3S_CA_DATA=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml config view --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+  export KUBECONFIG=~/.kube/config
+  mkdir -p ~/.kube
   echo "${K3S_CA_DATA}" | base64 -d > ~/.kube/k3s-ca.crt
   kubectl config set-cluster k3s-cluster   --server="${K3S_SERVER_IP}"   --certificate-authority="${HOME}/.kube/k3s-ca.crt"   --embed-certs=true
   kubectl config set-credentials my-admin-sa-user   --token="${TOKEN}"
@@ -112,6 +114,7 @@ xps-13-9350   Ready    control-plane,master   27m   v1.32.5+k3s1
 ```bash
   sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f ../MultiTenantK3sWithKyverno/install/read-only-sa.yaml
   TOKEN=$(sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml create token -n platform-team my-readonly-sa --duration=8760h)
+  export KUBECONFIG=~/.kube/config
   kubectl config set-credentials read-only-sa-user   --token="${TOKEN}"
   kubectl config set-context my-readonly-sa-context   --cluster=k3s-cluster   --user=read-only-sa-user   --namespace=default
 ```
@@ -171,7 +174,7 @@ K3s already has Traefik installed as a helm package. They have a special way to 
   helm show values jetstack/cert-manager
   helm install cert-manager jetstack/cert-manager --create-namespace --namespace cert-manager  -f ../MultiTenantK3sWithKyverno/install/cert-manager-values.yaml # check latest version 
   helm get values cert-manager -n cert-manager
-  kubectl get pods -n cert-manager
+  kubectl get pods -n cert-manager -w
   kubectl get secrets cert-manager-webhook-ca -n cert-manager -o jsonpath='{.data.tls\.crt}' | base64 --decode > ../MultiTenantK3sWithKyverno/install/internal-ca.crt
 ```
 #### Prometheus
@@ -208,10 +211,10 @@ https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus#
 
 #### Traefik
 
-https://k3s.rocks/traefik-dashboard/#expose-traefik-dashboard
+Resource: https://k3s.rocks/traefik-dashboard/#expose-traefik-dashboard
 
 Metrics:
-- `kubectl --insecure-skip-tls-verify -n kube-system port-forward deployments/traefik 8080:9100`
+- `kubectl -n kube-system port-forward deployments/traefik 8080:9100`
 - Visit http://127.0.0.1:8080/metrics/
 
 ![](../MultiTenantK3sWithKyverno/2025-05-28-13-35-21.png)

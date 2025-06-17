@@ -1,0 +1,57 @@
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-a
+spec:
+  owners:
+    - clusterRoles:
+        - admin
+        - capsule-namespace-deleter
+        - capsule-tenant-ingressroute-creator
+      kind: ServiceAccount
+      name: system:serviceaccount:tenant-system:alice-sa
+---
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-b
+spec:
+  owners:
+    - clusterRoles:
+        - admin
+        - capsule-namespace-deleter
+        - capsule-tenant-ingressroute-creator
+      kind: ServiceAccount
+      name: system:serviceaccount:tenant-system:bob-sa
+---
+apiVersion: capsule.clastix.io/v1beta2
+kind: Tenant
+metadata:
+  name: team-c
+spec:
+  owners:
+    - clusterRoles:
+        - admin
+        - capsule-namespace-deleter
+        - capsule-tenant-ingressroute-creator
+      kind: ServiceAccount
+      name: system:serviceaccount:tenant-system:charlie-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: capsule-tenant-ingressroute-creator
+rules:
+  - apiGroups:
+      - traefik.io
+    resources:
+      - ingressroutes
+      - ingressroutes/status
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
