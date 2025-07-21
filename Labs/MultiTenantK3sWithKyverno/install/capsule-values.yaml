@@ -375,26 +375,26 @@ webhooks:
 
 
 # ServiceMonitor
-serviceMonitor:
+#serviceMonitor:
   # -- Enable ServiceMonitor
-  enabled: true
+ # enabled: true
   # -- Install the ServiceMonitor into a different Namespace, as the monitoring stack one (default: the release one)
-  namespace: ''
+  #namespace: ''
   # -- Assign additional labels according to Prometheus' serviceMonitorSelector matching labels
-  labels: {}
+#  labels: {}
   # -- Assign additional Annotations
-  annotations: {}
+  #annotations: {}
   # -- Change matching labels
-  matchLabels: {}
+  #matchLabels: {}
   # -- Set targetLabels for the serviceMonitor
-  targetLabels: []
-  endpoint:
+  #targetLabels: []
+  #endpoint:
     # -- Set the scrape interval for the endpoint of the serviceMonitor
-    interval: "15s"
+   # interval: "15s"
     # -- Set the scrape timeout for the endpoint of the serviceMonitor
-    scrapeTimeout: ""
+   # scrapeTimeout: ""
     # -- Set metricRelabelings for the endpoint of the serviceMonitor
-    metricRelabelings: []
+   # metricRelabelings: []
     # -- Set relabelings for the endpoint of the serviceMonitor
-    relabelings: []
+   # relabelings: []
 

@@ -250,6 +250,7 @@ Policy Reporter:
   kubectl logs -f deployment/capsule-controller-manager -c manager -n capsule
   # Post Install setup
   kubectl create namespace tenant-system
+  kubectl apply -f install/tenants.yaml
   kubectl create serviceaccount alice-sa -n tenant-system
   kubectl create serviceaccount bob-sa -n tenant-system
   kubectl create serviceaccount charlie-sa -n tenant-system
