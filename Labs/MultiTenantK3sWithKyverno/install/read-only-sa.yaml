@@ -10,33 +10,38 @@ metadata:
   name: readonly-access
   namespace: platform-team 
 rules:
-- apiGroups: [""] # "" indicates the core API group
+- apiGroups: ["*"]
   resources: ["*"]
   verbs: ["get", "list", "watch"]
-- apiGroups: ["apps"]
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["networking.k8s.io"]
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["admissionregistration.k8s.io"] # For webhooks
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["apiextensions.k8s.io"] # For CRDs
-  resources: ["customresourcedefinitions"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["cert-manager.io"] # For cert-manager resources
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["capsule.clastix.io"] # For Capsule resources
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["kyverno.io"] # For Kyverno resources
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["monitoring.coreos.com"] # For Prometheus/Grafana resources
-  resources: ["*"]
-  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["*"]
+  verbs: ["get"]
+# - apiGroups: [""] # "" indicates the core API group
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["apps"]
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["networking.k8s.io"]
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["admissionregistration.k8s.io"] # For webhooks
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["apiextensions.k8s.io"] # For CRDs
+#   resources: ["customresourcedefinitions"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["cert-manager.io"] # For cert-manager resources
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["capsule.clastix.io"] # For Capsule resources
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["kyverno.io"] # For Kyverno resources
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
+# - apiGroups: ["monitoring.coreos.com"] # For Prometheus/Grafana resources
+#   resources: ["*"]
+#   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
